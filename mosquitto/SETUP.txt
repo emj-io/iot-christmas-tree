@@ -1,0 +1,31 @@
+# Setting up mosquitto/AWS IOT
+## Based on https://aws.amazon.com/blogs/iot/how-to-bridge-mosquitto-mqtt-broker-to-aws-iot/
+
+## Create an IAM policy for the bridge, allowing `iot:*`
+```
+aws iot create-policy --policy-name iot-christmas-teree --policy-document '{"Version": "2012-10-17","Statement": [{"Effect": "Allow","Action": "iot:*","Resource": "*"}]}'
+
+## Install mosquitto locally in OS X using homebrew
+```
+brew install mosquitto
+```
+
+## Create certs for AWS IOT
+```
+mkdir -p /usr/local/etc/mosquitto/certs
+cd /usr/local/etc/mosquitto/certs
+aws iot create-keys-and-certificate --set-as-active --certificate-pem-outfile cert.crt --private-key-outfile private.key --public-key-outfile public.key --region us-east-1
+```
+
+## Attach the policy to your certificate
+aws iot list-certificates
+aws iot attach-principal-policy --policy-name bay-decoration-2017 --principal <CERTIFICATE_ARN>
+
+wget https://www.symantec.com/content/en/us/enterprise/verisign/roots/
+VeriSign-Class%203-Public-Primary-Certification-Authority-G5.pem -O rootCA.pem
+
+chmod 600 private.key cert.crt rootCA.pem
+
+## Copy `bridge.conf` to /usr/local/etc/mosquitto/
+## Start mosquitto!
+`mosquitto -c /usr/local/etc/mosquitto/bridge.conf`
